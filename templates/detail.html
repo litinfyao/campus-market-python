@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ item.title }} · {{ site_name }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     组员 C 负责修改此文件（templates/detail.html）
+     提示：
+       - {{ item.title }}、{{ item.price }}、{{ item.category }}、
+         {{ item.condition }}、{{ item.campus }}、{{ item.seller }}、
+         {{ item.desc }}、{{ item.image }} 来自 LISTINGS 中的商品对象
+       - {{ contact_tip }} 来自 data/site_info.py
+       - {{ site_name }}、{{ footer_text }} 来自 data/site_info.py
+       - {{ logged_in }} 是当前登录用户名（未登录为 None）
+     ═══════════════════════════════════════ -->
+
+<!-- 导航栏 -->
+<header class="navbar">
+  <div class="nav-inner">
+    <a href="/" class="nav-brand">{{ site_name }}</a>
+    <nav class="nav-links">
+      {% if logged_in %}
+        <span class="nav-user">👤 {{ logged_in }}</span>
+        <a href="/post" class="btn btn-primary">+ 发布商品</a>
+        <a href="/logout" class="btn btn-ghost">退出</a>
+      {% else %}
+        <a href="/login" class="btn btn-primary">登录</a>
+      {% endif %}
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <a href="/" class="back-link">← 返回列表</a>
+
+  <div class="detail-wrap">
+
+    <!-- 图片区 -->
+    <div class="detail-img-area">
+      {% if item.image %}
+      <img src="{{ item.image }}" alt="{{ item.title }}" class="detail-img">
+      {% else %}
+      <div class="detail-img-placeholder">📦<br><small>暂无图片</small></div>
+      {% endif %}
+    </div>
+
+    <!-- 信息区 -->
+    <div class="detail-info">
+      <h1 class="detail-title">{{ item.title }}</h1>
+      <p class="detail-price">¥ {{ item.price }}</p>
+
+      <div class="detail-tags">
+        <span class="tag">{{ item.category }}</span>
+        <span class="tag">{{ item.condition }}</span>
+        <span class="tag tag-campus">{{ item.campus }}</span>
+      </div>
+
+      <div class="detail-section">
+        <h3>商品描述</h3>
+        <p>{{ item.desc if item.desc else "卖家暂未填写描述。" }}</p>
+      </div>
+
+      <div class="detail-section">
+        <h3>卖家信息</h3>
+        <p>{{ item.seller }}</p>
+      </div>
+
+      <div class="detail-section contact-tip">
+        <p>📞 {{ contact_tip }}</p>
+      </div>
+
+      {% if not logged_in %}
+      <div class="login-prompt">
+        <a href="/login">登录后查看联系方式</a>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</main>
+
+<footer class="footer">
+  <p>{{ footer_text }}</p>
+</footer>
+
+</body>
+</html>

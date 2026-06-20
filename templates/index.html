@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ site_name }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     组员 A 负责修改此文件（templates/index.html）
+     提示：
+       - {{ site_name }}、{{ notice }}、{{ footer_text }} 来自 data/site_info.py
+       - {{ welcome_text }}、{{ search_hint }}、{{ result_empty }} 来自 data/page_text.py
+       - {{ categories }}、{{ campuses }} 来自 data/categories.py
+       - {{ listings }} 是过滤后的商品列表
+       - {{ logged_in }} 是当前登录用户名（未登录为 None）
+     ═══════════════════════════════════════ -->
+
+<!-- 导航栏 -->
+<header class="navbar">
+  <div class="nav-inner">
+    <a href="/" class="nav-brand">{{ site_name }}</a>
+    <nav class="nav-links">
+      {% if logged_in %}
+        <span class="nav-user">👤 {{ logged_in }}</span>
+        <a href="/post" class="btn btn-primary">+ 发布商品</a>
+        <a href="/logout" class="btn btn-ghost">退出</a>
+      {% else %}
+        <a href="/login" class="btn btn-primary">登录</a>
+      {% endif %}
+    </nav>
+  </div>
+</header>
+
+<!-- 公告栏 -->
+{% if notice %}
+<div class="notice-bar">📢 {{ notice }}</div>
+{% endif %}
+
+<!-- 主体区域 -->
+<main class="container">
+
+  <!-- 欢迎语 -->
+  <div class="hero">
+    <h1>{{ welcome_text }}</h1>
+  </div>
+
+  <!-- 搜索 + 分类筛选 -->
+  <div class="filter-bar">
+    <form method="GET" action="/" class="search-form">
+      <input type="text" name="q" value="{{ cur_q }}"
+             placeholder="{{ search_hint }}" class="search-input">
+      <button type="submit" class="btn btn-primary">搜索</button>
+    </form>
+
+    <div class="category-tabs">
+      <a href="/" class="tab {% if not cur_category %}tab-active{% endif %}">全部</a>
+      {% for cat in categories %}
+      <a href="/?category={{ cat }}"
+         class="tab {% if cur_category == cat %}tab-active{% endif %}">{{ cat }}</a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- 商品列表 -->
+  {% if listings %}
+  <div class="listing-grid">
+    {% for item in listings %}
+    <a href="/detail/{{ item.id }}" class="card">
+      {% if item.image %}
+      <img src="{{ item.image }}" alt="{{ item.title }}" class="card-img">
+      {% else %}
+      <div class="card-img-placeholder">📦</div>
+      {% endif %}
+      <div class="card-body">
+        <h3 class="card-title">{{ item.title }}</h3>
+        <p class="card-price">¥ {{ item.price }}</p>
+        <div class="card-meta">
+          <span class="tag">{{ item.category }}</span>
+          <span class="tag">{{ item.condition }}</span>
+          <span class="tag tag-campus">{{ item.campus }}</span>
+        </div>
+        <p class="card-seller">卖家：{{ item.seller }}</p>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-msg">{{ result_empty }}</div>
+  {% endif %}
+
+</main>
+
+<!-- 页脚 -->
+<footer class="footer">
+  <p>{{ footer_text }}</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>发布商品 · {{ site_name }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     组员 B 负责修改此文件（templates/post.html）
+     提示：
+       - {{ categories }}、{{ campuses }}、{{ condition_options }} 来自 data/categories.py
+       - {{ post_hint }} 来自 data/page_text.py
+       - {{ site_name }}、{{ footer_text }} 来自 data/site_info.py
+       - 表单必须 POST 到 /post，字段名不能改变
+     ═══════════════════════════════════════ -->
+
+<!-- 导航栏 -->
+<header class="navbar">
+  <div class="nav-inner">
+    <a href="/" class="nav-brand">{{ site_name }}</a>
+    <nav class="nav-links">
+      {% if logged_in %}
+        <span class="nav-user">👤 {{ logged_in }}</span>
+        <a href="/logout" class="btn btn-ghost">退出</a>
+      {% endif %}
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <div class="form-page">
+    <h2 class="page-title">发布二手商品</h2>
+    <p class="page-hint">{{ post_hint }}</p>
+
+    <form method="POST" action="/post" class="post-form">
+
+      <!-- 商品名称 -->
+      <div class="form-group">
+        <label for="title">商品名称 <span class="required">*</span></label>
+        <input type="text" id="title" name="title"
+               placeholder="请输入商品名称" required maxlength="50">
+      </div>
+
+      <!-- 分类 + 成色（并排） -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="category">商品分类 <span class="required">*</span></label>
+          <select id="category" name="category" required>
+            <option value="">请选择分类</option>
+            {% for cat in categories %}
+            <option value="{{ cat }}">{{ cat }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="condition">成色 <span class="required">*</span></label>
+          <select id="condition" name="condition" required>
+            <option value="">请选择成色</option>
+            {% for c in condition_options %}
+            <option value="{{ c }}">{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <!-- 价格 + 校区（并排） -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="price">价格（元）<span class="required">*</span></label>
+          <input type="number" id="price" name="price"
+                 min="0" max="9999" placeholder="0" required>
+        </div>
+        <div class="form-group">
+          <label for="campus">交易校区 <span class="required">*</span></label>
+          <select id="campus" name="campus" required>
+            <option value="">请选择校区</option>
+            {% for cp in campuses %}
+            <option value="{{ cp }}">{{ cp }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <!-- 商品描述 -->
+      <div class="form-group">
+        <label for="desc">商品描述</label>
+        <textarea id="desc" name="desc" rows="4"
+                  placeholder="描述商品情况、附件等..."></textarea>
+      </div>
+
+      <!-- 图片链接 -->
+      <div class="form-group">
+        <label for="image">图片链接（可选）</label>
+        <input type="url" id="image" name="image"
+               placeholder="https://...（留空也可）">
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg">确认发布</button>
+      <a href="/" class="btn btn-ghost btn-lg" style="margin-left:10px">取消</a>
+    </form>
+  </div>
+</main>
+
+<footer class="footer">
+  <p>{{ footer_text }}</p>
+</footer>
+
+</body>
+</html>
