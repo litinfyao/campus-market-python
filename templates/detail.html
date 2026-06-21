@@ -7,19 +7,6 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-
-<!-- ═══════════════════════════════════════
-     组员 C 负责修改此文件（templates/detail.html）
-     提示：
-       - {{ item.title }}、{{ item.price }}、{{ item.category }}、
-         {{ item.condition }}、{{ item.campus }}、{{ item.seller }}、
-         {{ item.desc }}、{{ item.image }} 来自 LISTINGS 中的商品对象
-       - {{ contact_tip }} 来自 data/site_info.py
-       - {{ site_name }}、{{ footer_text }} 来自 data/site_info.py
-       - {{ logged_in }} 是当前登录用户名（未登录为 None）
-     ═══════════════════════════════════════ -->
-
-<!-- 导航栏 -->
 <header class="navbar">
   <div class="nav-inner">
     <a href="/" class="nav-brand">{{ site_name }}</a>
@@ -34,59 +21,54 @@
     </nav>
   </div>
 </header>
-
 <main class="container">
-  <a href="/" class="back-link">← 返回列表</a>
-
+  <a href="/" class="back-link">← 返回首页</a>
   <div class="detail-wrap">
-
-    <!-- 图片区 -->
     <div class="detail-img-area">
       {% if item.image %}
-      <img src="{{ item.image }}" alt="{{ item.title }}" class="detail-img">
+        <img src="{{ item.image }}" alt="{{ item.title }}" class="detail-img">
       {% else %}
-      <div class="detail-img-placeholder">📦<br><small>暂无图片</small></div>
+        <div class="detail-img-placeholder">📦</div>
+        <p>暂无商品图片</p>
       {% endif %}
     </div>
-
-    <!-- 信息区 -->
     <div class="detail-info">
       <h1 class="detail-title">{{ item.title }}</h1>
-      <p class="detail-price">¥ {{ item.price }}</p>
-
+      <p class="detail-price">¥{{ item.price }}</p>
       <div class="detail-tags">
         <span class="tag">{{ item.category }}</span>
         <span class="tag">{{ item.condition }}</span>
-        <span class="tag tag-campus">{{ item.campus }}</span>
+        <span class="tag tag-campus">📍 {{ item.campus }}</span>
       </div>
-
       <div class="detail-section">
-        <h3>商品描述</h3>
-        <p>{{ item.desc if item.desc else "卖家暂未填写描述。" }}</p>
+        <h3>📝 商品描述</h3>
+        <p>{{ item.desc }}</p>
       </div>
-
       <div class="detail-section">
-        <h3>卖家信息</h3>
-        <p>{{ item.seller }}</p>
+        <h3>👤 卖家信息</h3>
+        <p>卖家：{{ item.seller }} <span style="color:#4caf50;">✅ 校园认证用户</span></p>
+        <p>所在校区：{{ item.campus }}</p>
       </div>
-
-      <div class="detail-section contact-tip">
-        <p>📞 {{ contact_tip }}</p>
+      <div class="detail-section contact-section">
+        <h3>📞 联系方式</h3>
+        <p class="contact-tip">{{ contact_tip }}</p>
+        {% if logged_in %}
+        <div class="contact-actions">
+          <button class="btn btn-primary" onclick="alert('卖家微信号：{{ item.seller }}_wx')">查看微信号</button>
+          <button class="btn btn-secondary" onclick="alert('卖家邮箱：{{ item.seller }}@school.edu.cn')">查看邮箱</button>
+        </div>
+        {% else %}
+        <div class="login-prompt">
+          <p>🔒 登录后查看完整联系方式</p>
+          <a href="/login?next=/detail/{{ item.id }}" class="btn btn-primary">立即登录</a>
+        </div>
+        {% endif %}
       </div>
-
-      {% if not logged_in %}
-      <div class="login-prompt">
-        <a href="/login">登录后查看联系方式</a>
-      </div>
-      {% endif %}
     </div>
-
   </div>
 </main>
-
 <footer class="footer">
   <p>{{ footer_text }}</p>
 </footer>
-
 </body>
 </html>
