@@ -5,6 +5,76 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>发布商品 · {{ site_name }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .image-preview-area {
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      min-height: 120px;
+      margin-top: 10px;
+    }
+    .image-preview-area.dragover {
+      border-color: #4a90d9;
+      background-color: #f0f7ff;
+    }
+    .image-preview-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    .image-preview-item {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 2px solid #eee;
+    }
+    .image-preview-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .image-preview-item .remove-btn {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .image-preview-item .remove-btn:hover {
+      background: rgba(255,0,0,0.8);
+    }
+    .upload-hint {
+      color: #888;
+      font-size: 14px;
+    }
+    .form-group.has-error input,
+    .form-group.has-error select,
+    .form-group.has-error textarea {
+      border-color: #e74c3c;
+    }
+    .form-group.has-error .error-message {
+      color: #e74c3c;
+      font-size: 12px;
+      margin-top: 4px;
+      display: block;
+    }
+    .form-group .error-message {
+      display: none;
+    }
+  </style>
 </head>
 <body>
 
@@ -15,7 +85,7 @@
        - {{ post_hint }} 来自 data/page_text.py
        - {{ site_name }}、{{ footer_text }} 来自 data/site_info.py
        - 表单必须 POST 到 /post，字段名不能改变
-     ═══════════════════════════════════════ -->
+     ═══════════════════════════════════ -->
 
 <!-- 导航栏 -->
 <header class="navbar">
@@ -35,13 +105,14 @@
     <h2 class="page-title">发布二手商品</h2>
     <p class="page-hint">{{ post_hint }}</p>
 
-    <form method="POST" action="/post" class="post-form">
+    <form method="POST" action="/post" class="post-form" enctype="multipart/form-data" id="postForm">
 
       <!-- 商品名称 -->
       <div class="form-group">
         <label for="title">商品名称 <span class="required">*</span></label>
         <input type="text" id="title" name="title"
                placeholder="请输入商品名称" required maxlength="50">
+        <span class="error-message" id="titleError">请输入商品名称</span>
       </div>
 
       <!-- 分类 + 成色（并排） -->
@@ -54,6 +125,7 @@
             <option value="{{ cat }}">{{ cat }}</option>
             {% endfor %}
           </select>
+          <span class="error-message" id="categoryError">请选择商品分类</span>
         </div>
         <div class="form-group">
           <label for="condition">成色 <span class="required">*</span></label>
@@ -63,6 +135,7 @@
             <option value="{{ c }}">{{ c }}</option>
             {% endfor %}
           </select>
+          <span class="error-message" id="conditionError">请选择成色</span>
         </div>
       </div>
 
@@ -71,7 +144,8 @@
         <div class="form-group">
           <label for="price">价格（元）<span class="required">*</span></label>
           <input type="number" id="price" name="price"
-                 min="0" max="9999" placeholder="0" required>
+                 min="0" max="99999" placeholder="0" required>
+          <span class="error-message" id="priceError">请输入有效价格（0-99999元）</span>
         </div>
         <div class="form-group">
           <label for="campus">交易校区 <span class="required">*</span></label>
@@ -81,7 +155,16 @@
             <option value="{{ cp }}">{{ cp }}</option>
             {% endfor %}
           </select>
+          <span class="error-message" id="campusError">请选择交易校区</span>
         </div>
+      </div>
+
+      <!-- 联系方式 -->
+      <div class="form-group">
+        <label for="contact">联系方式 <span class="required">*</span></label>
+        <input type="text" id="contact" name="contact"
+               placeholder="手机号、QQ号等" required maxlength="20">
+        <span class="error-message" id="contactError">请输入联系方式</span>
       </div>
 
       <!-- 商品描述 -->
@@ -91,11 +174,23 @@
                   placeholder="描述商品情况、附件等..."></textarea>
       </div>
 
-      <!-- 图片链接 -->
+      <!-- 图片上传（支持多图） -->
       <div class="form-group">
-        <label for="image">图片链接（可选）</label>
-        <input type="url" id="image" name="image"
-               placeholder="https://...（留空也可）">
+        <label for="images">图片上传（支持多图）</label>
+        <input type="file" id="images" name="images" multiple accept="image/*"
+               style="display: none;" onchange="handleImageSelect(event)">
+        <div class="image-preview-area" id="imagePreviewArea"
+             onclick="document.getElementById('images').click()"
+             ondragover="event.preventDefault(); this.classList.add('dragover')"
+             ondragleave="this.classList.remove('dragover')"
+             ondrop="event.preventDefault(); this.classList.remove('dragover'); handleImageDrop(event)">
+          <div class="image-preview-list" id="imagePreviewList"></div>
+          <div class="upload-hint" id="uploadHint">
+            <p>📷 点击或拖拽图片到此处上传（支持多图）</p>
+            <p>支持 JPG、PNG 格式，建议每张不超过 2MB</p>
+          </div>
+        </div>
+        <input type="hidden" name="image_urls" id="imageUrls">
       </div>
 
       <button type="submit" class="btn btn-primary btn-lg">确认发布</button>
@@ -107,6 +202,147 @@
 <footer class="footer">
   <p>{{ footer_text }}</p>
 </footer>
+
+<script>
+  const imagePreviewList = document.getElementById('imagePreviewList');
+  const uploadHint = document.getElementById('uploadHint');
+  const imageUrlsInput = document.getElementById('imageUrls');
+  const previewImages = [];
+
+  function handleImageSelect(event) {
+    const files = event.target.files;
+    processFiles(files);
+  }
+
+  function handleImageDrop(event) {
+    const files = event.dataTransfer.files;
+    processFiles(files);
+  }
+
+  function processFiles(files) {
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          previewImages.push({
+            src: e.target.result,
+            file: file
+          });
+          renderPreview();
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+  }
+
+  function renderPreview() {
+    imagePreviewList.innerHTML = '';
+    previewImages.forEach((img, index) => {
+      const item = document.createElement('div');
+      item.className = 'image-preview-item';
+      item.innerHTML = `
+        <img src="${img.src}" alt="预览图">
+        <button class="remove-btn" onclick="removeImage(${index})">×</button>
+      `;
+      imagePreviewList.appendChild(item);
+    });
+    uploadHint.style.display = previewImages.length > 0 ? 'none' : 'block';
+    imageUrlsInput.value = JSON.stringify(previewImages.map(img => img.src));
+  }
+
+  function removeImage(index) {
+    previewImages.splice(index, 1);
+    renderPreview();
+  }
+
+  const form = document.getElementById('postForm');
+  form.addEventListener('submit', function(e) {
+    let isValid = true;
+    
+    const title = document.getElementById('title').value.trim();
+    const category = document.getElementById('category').value;
+    const condition = document.getElementById('condition').value;
+    const price = document.getElementById('price').value;
+    const campus = document.getElementById('campus').value;
+    const contact = document.getElementById('contact').value.trim();
+
+    clearErrors();
+
+    if (!title) {
+      showError('title', '请输入商品名称');
+      isValid = false;
+    } else if (title.length > 50) {
+      showError('title', '商品名称不能超过50个字符');
+      isValid = false;
+    }
+
+    if (!category) {
+      showError('category', '请选择商品分类');
+      isValid = false;
+    }
+
+    if (!condition) {
+      showError('condition', '请选择成色');
+      isValid = false;
+    }
+
+    if (!price || price < 0 || price > 99999) {
+      showError('price', '请输入有效价格（0-99999元）');
+      isValid = false;
+    }
+
+    if (!campus) {
+      showError('campus', '请选择交易校区');
+      isValid = false;
+    }
+
+    if (!contact) {
+      showError('contact', '请输入联系方式');
+      isValid = false;
+    } else if (contact.length > 20) {
+      showError('contact', '联系方式不能超过20个字符');
+      isValid = false;
+    }
+
+    if (!isValid) {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  });
+
+  function showError(fieldId, message) {
+    const group = document.getElementById(fieldId).closest('.form-group');
+    group.classList.add('has-error');
+    const errorSpan = document.getElementById(fieldId + 'Error');
+    if (errorSpan) {
+      errorSpan.textContent = message;
+      errorSpan.style.display = 'block';
+    }
+  }
+
+  function clearErrors() {
+    document.querySelectorAll('.form-group').forEach(group => {
+      group.classList.remove('has-error');
+    });
+    document.querySelectorAll('.error-message').forEach(span => {
+      span.style.display = 'none';
+    });
+  }
+
+  document.querySelectorAll('input, select, textarea').forEach(el => {
+    el.addEventListener('blur', function() {
+      if (this.closest('.form-group').classList.contains('has-error')) {
+        clearErrors();
+      }
+    });
+    el.addEventListener('input', function() {
+      if (this.closest('.form-group').classList.contains('has-error')) {
+        clearErrors();
+      }
+    });
+  });
+</script>
 
 </body>
 </html>
