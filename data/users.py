@@ -4,7 +4,13 @@
 # key = 用户名，value = 密码（纯字符串，无需加密）
 
 USERS = {
-    "student01": "123456",   # 用户名：student01，密码：123456
+    "student01": "123456",
     "student02": "abcdef",
-    "test":      "test",     # 方便课堂演示
+    "student03": "888888",
+    "student04": "password",
+    "2021001": "21001",
+    "2021002": "21002",
+    "admin": "admin123",
+    "test": "test",
+    "guest": "guest",
 }
